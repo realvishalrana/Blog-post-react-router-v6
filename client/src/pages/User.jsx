@@ -1,8 +1,15 @@
 import { useLoaderData } from "react-router-dom";
 import { getUser } from "../api/users";
+import { getPosts } from "../api/posts";
+import { getTodos } from "../api/todos";
+import PostCard from "../components/PostCard";
+import TodoItem from "../components/TodoItem";
 
 function User() {
-  const user = useLoaderData();
+  const { posts, todos, user } = useLoaderData();
+
+  console.log("line 8", { posts, todos });
+
   return (
     <>
       <h1 className="page-title">{user.name}</h1>
@@ -17,12 +24,26 @@ function User() {
         <b>Address:</b> {user.address.street} {user.address.suite}{" "}
         {user.address.city} {user.address.zipcode}
       </div>
+      <h3 className="mt-4 mb-2">Posts</h3>
+      <div className="card-grid">
+        {posts.map((post) => (
+          <PostCard key={post.id} {...post} />
+        ))}
+      </div>
+      <h3 className="mt-4 mb-2">Todos</h3>
+      {todos.map((todo) => (
+        <TodoItem key={todo.id} {...todo} />
+      ))}
     </>
   );
 }
 
-function loader({ request: { signal }, params }) {
-  return getUser(params.userId, { signal });
+async function loader({ request: { signal }, params: { userId } }) {
+  const posts = getPosts({ signal, params: { userId } });
+  const todos = getTodos({ signal, params: { userId } });
+  const user = getUser(userId, { signal });
+
+  return { posts: await posts, todos: await todos, user: await user };
 }
 
 export const userRoute = {
